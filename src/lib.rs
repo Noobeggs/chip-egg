@@ -29,8 +29,26 @@ impl Chip8 {
         opcode
     }
 
-    pub fn decode() {
+    pub fn decode(opcode: u16) {
+        let x = (opcode & 0x0F00) >> 8;
+        let y = (opcode & 0x00F0) >> 4;
+        let n = opcode & 0x000F;
+        let nn = opcode & 0x00FF;
+        let nnn = opcode & 0x0FFF;
 
+        let nib_1 = (opcode & 0xF000) >> 12;
+        let nib_2 = (opcode & 0x0F00) >> 8;
+        let nib_3 = (opcode & 0x00F0) >> 4;
+        let nib_4 = opcode & 0x000F;
+
+        match nib_1, nib_2, nib_3, nib_4 {
+            (0x0, 0x0, 0xE, 0x0) => {}
+            (0x1, _, _, _) => self.pc = nnn,
+            (0x6, _, _, _) => self.vr[x] = nn,
+            (0x7, _, _, _) => self.vr[x] = self.vr[x].wrapping_add(nn),
+            (0xA, _, _, _) => self.ir = nnn,
+            (0xD, _, _, _) => {}
+        }
     }
 
     pub fn execute() {
