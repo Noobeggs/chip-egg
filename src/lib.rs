@@ -6,7 +6,7 @@ use options::Options;
 pub struct Chip8 {
     pc: u16,
     ir: u16,
-    vr: [u16; 16],
+    vr: [u8; 16],
     stack: [u16; 16],
     memory: [u8; 4096],
     display: Display,
