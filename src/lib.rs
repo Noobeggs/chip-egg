@@ -16,8 +16,24 @@ pub struct Chip8 {
 }
 
 impl Chip8 {
-    pub fn new() -> Chip8 {
-        todo!();
+    pub fn new(options: Options) -> Chip8 {
+        // todo!();
+        let mut memory = [0; 4096];
+
+        let font = options.font;
+
+        memory[0x50 .. (0x50 + font.len())].clone_from_slice(&font);
+        Chip8 {
+            pc: 0,
+            ir: 0,
+            vr: [0; 16],
+            stack: [0; 16],
+            memory: memory,
+            display: Display::new(),
+            delay_timer: 0,
+            sound_timer: 0,
+            options: options,
+        }
     }
 
     pub fn fetch(&mut self) -> u16 {
@@ -61,6 +77,6 @@ impl Chip8 {
     }
 
     pub fn execute() {
-
+        todo!();
     }
 }

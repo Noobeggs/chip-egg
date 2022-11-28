@@ -1,5 +1,5 @@
 pub struct Options {
-    font: [u8; 80]
+    pub font: [u8; 80]
 }
 
 impl Options {
