@@ -1,7 +1,7 @@
 mod display;
 mod options;
-use display::Display;
-use options::Options;
+pub use display::Display;
+pub use options::Options;
 
 pub struct Chip8 {
     pc: u16,
@@ -9,7 +9,7 @@ pub struct Chip8 {
     vr: [u8; 16],
     stack: [u16; 16],
     memory: [u8; 4096],
-    display: Display,
+    pub display: Display,
     delay_timer: u8,
     sound_timer: u8,
     options: Options

@@ -1,7 +1,7 @@
 pub struct Display {
-    display: [[u8; 32]; 64],
-    width: u8,
-    height: u8,
+    pub display: [[u8; 32]; 64],
+    pub width: u8,
+    pub height: u8,
 }
 
 impl Display {
