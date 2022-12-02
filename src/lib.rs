@@ -138,8 +138,8 @@ impl Chip8 {
             }
             (0x8, _, _, 0x6) => {
                 // Ambiguous instruction! TODO: option to switch implementations.
-                self.vr[x] = self.vr[y];
                 self.vr[0xF] = self.vr[x] & 1;
+                // self.vr[x] = self.vr[y]; // old behavior.
                 self.vr[x] = self.vr[x] >> 1;
             }
             (0x8, _, _, 0x7) => {
@@ -149,8 +149,8 @@ impl Chip8 {
             }
             (0x8, _, _, 0xE) => {
                 // Ambiguous instruction! TODO: option to switch implementations.
-                self.vr[x] = self.vr[y];
                 self.vr[0xF] = (self.vr[x] & 0x80) >> 7;
+                // self.vr[x] = self.vr[y]; // old behavior.
                 self.vr[x] = self.vr[x] << 1;
             }
             (0x9, _, _, 0x0) => {
@@ -161,7 +161,8 @@ impl Chip8 {
             (0xA, _, _, _) => self.ir = nnn,
             (0xB, _, _, _) => {
                 // Ambiguous instruction! TODO: option to switch implementations.
-                self.pc = nnn + u16::from(self.vr[0]);
+                self.pc = nnn + u16::from(self.vr[0]); // old behavior.
+                // self.pc = nnn + u16::from(self.vr[x]); // new behavior.
             }
             (0xC, _, _, _) => self.vr[x] = fastrand::u8(..) & nn,
             (0xD, _, _, _) => {
@@ -191,7 +192,7 @@ impl Chip8 {
             (0xF, _, 0x1, 0x8) => self.sound_timer = self.vr[x],
             (0xF, _, 0x1, 0xE) => {
                 // Ambiguous instruction! TODO: option to switch implementations.
-                if self.ir < 0x0FFF && (self.ir + u16::from(self.vr[x])) >= 0x1000 {
+                if self.ir < 0x0FFF && (self.ir + u16::from(self.vr[x])) >= 0x1000 { // new behavior.
                     self.vr[0xF] = 1
                 }
                 self.ir = self.ir.wrapping_add(u16::from(self.vr[x]));
@@ -204,13 +205,13 @@ impl Chip8 {
             }
             (0xF, _, 0x5, 0x5) => {
                 // Ambiguous instruction! TODO: option to switch implementations.
-                for i in 0..self.vr.len() {
+                for i in 0..=x { // new behavior.
                     self.memory[self.ir as usize + i] = self.vr[i];
                 }
             }
             (0xF, _, 0x6, 0x5) => {
                 // Ambiguous instruction! TODO: option to switch implementations.
-                for i in 0..self.vr.len() {
+                for i in 0..=x { // new behavior.
                     self.vr[i] = self.memory[self.ir as usize + i];
                 }
             }
