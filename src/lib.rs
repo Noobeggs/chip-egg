@@ -56,6 +56,11 @@ impl Chip8 {
         self.memory[0x200..][..rom.len()].copy_from_slice(rom.as_slice());
     }
 
+    pub fn set_key(&mut self, key: usize, pressed: bool) -> bool {
+        self.keyboard[key] = pressed;
+        true
+    }
+
     pub fn fetch(&mut self) -> u16 {
         // What SHOULD happen when we read the end of memory???
         // wrap back to the beginning???

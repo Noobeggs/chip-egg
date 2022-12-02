@@ -32,7 +32,63 @@ impl Chip8Window {
     }
 
     pub fn input(&mut self, event: &WindowEvent) -> bool {
-        false
+        match event {
+            WindowEvent::KeyboardInput {
+                input:
+                    KeyboardInput {
+                        state: state,
+                        virtual_keycode: Some(keycode),
+                        ..
+                    },
+                ..
+            } => {
+                match state {
+                    ElementState::Pressed => {
+                        match keycode {
+                            VirtualKeyCode::Key1 => self.chip8.set_key(0x1, true),
+                            VirtualKeyCode::Key2 => self.chip8.set_key(0x2, true),
+                            VirtualKeyCode::Key3 => self.chip8.set_key(0x3, true),
+                            VirtualKeyCode::Key4 => self.chip8.set_key(0xC, true),
+                            VirtualKeyCode::Q => self.chip8.set_key(0x4, true),
+                            VirtualKeyCode::W => self.chip8.set_key(0x5, true),
+                            VirtualKeyCode::E => self.chip8.set_key(0x6, true),
+                            VirtualKeyCode::R => self.chip8.set_key(0xD, true),
+                            VirtualKeyCode::A => self.chip8.set_key(0x7, true),
+                            VirtualKeyCode::S => self.chip8.set_key(0x8, true),
+                            VirtualKeyCode::D => self.chip8.set_key(0x9, true),
+                            VirtualKeyCode::F => self.chip8.set_key(0xE, true),
+                            VirtualKeyCode::Z => self.chip8.set_key(0xA, true),
+                            VirtualKeyCode::X => self.chip8.set_key(0x0, true),
+                            VirtualKeyCode::C => self.chip8.set_key(0xB, true),
+                            VirtualKeyCode::V => self.chip8.set_key(0xF, true),
+                            _ => false
+                        }
+                    }
+                    ElementState::Released => {
+                        match keycode {
+                            VirtualKeyCode::Key1 => self.chip8.set_key(0x1, false),
+                            VirtualKeyCode::Key2 => self.chip8.set_key(0x2, false),
+                            VirtualKeyCode::Key3 => self.chip8.set_key(0x3, false),
+                            VirtualKeyCode::Key4 => self.chip8.set_key(0xC, false),
+                            VirtualKeyCode::Q => self.chip8.set_key(0x4, false),
+                            VirtualKeyCode::W => self.chip8.set_key(0x5, false),
+                            VirtualKeyCode::E => self.chip8.set_key(0x6, false),
+                            VirtualKeyCode::R => self.chip8.set_key(0xD, false),
+                            VirtualKeyCode::A => self.chip8.set_key(0x7, false),
+                            VirtualKeyCode::S => self.chip8.set_key(0x8, false),
+                            VirtualKeyCode::D => self.chip8.set_key(0x9, false),
+                            VirtualKeyCode::F => self.chip8.set_key(0xE, false),
+                            VirtualKeyCode::Z => self.chip8.set_key(0xA, false),
+                            VirtualKeyCode::X => self.chip8.set_key(0x0, false),
+                            VirtualKeyCode::C => self.chip8.set_key(0xB, false),
+                            VirtualKeyCode::V => self.chip8.set_key(0xF, false),
+                            _ => false
+                        }
+                    }
+                }
+            }
+            _ => false
+        }
     }
 
     pub fn update(&mut self) {
