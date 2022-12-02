@@ -171,7 +171,7 @@ impl Chip8 {
                 //     let mut byte = 
                 // }
                 let sprite = &self.memory[self.ir as usize .. (self.ir + n) as usize];
-                self.display.draw(sprite, self.vr[x], self.vr[y]);
+                self.vr[0xF] = self.display.draw(sprite, self.vr[x], self.vr[y]);
             }
             (0xE, _, 0x9, 0xE) => if self.keyboard[self.vr[x] as usize] {self.fetch();},
             (0xE, _, 0xA, 0x1) => if !self.keyboard[self.vr[x] as usize] {self.fetch();},
