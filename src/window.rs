@@ -36,7 +36,7 @@ impl Chip8Window {
             WindowEvent::KeyboardInput {
                 input:
                     KeyboardInput {
-                        state: state,
+                        state,
                         virtual_keycode: Some(keycode),
                         ..
                     },
