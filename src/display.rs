@@ -78,9 +78,9 @@ impl Display {
             if row + y as usize >= self.height as usize {
                 break;
             }
-            for pixel in 0..8 {
-                if x + pixel as u8 >= self.width ||  y + row as u8 >= self.height {
-                    continue;
+            for pixel in 0..7 {
+                if x + pixel as u8 >= self.width {
+                    break;
                 }
                 if sprite_row & (0x80 >> pixel) != 0 {
                     if !self.redraw {
