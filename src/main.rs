@@ -17,5 +17,5 @@ fn main() {
     // let mut buf = [0u8; 3584];
     let rom = read(filename).expect("Error reading file.");
 
-    pollster::block_on(run(rom));
+    pollster::block_on(run(rom)).expect("Pollster Error");
 }

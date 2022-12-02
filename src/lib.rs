@@ -13,6 +13,7 @@ pub struct Chip8 {
     pc: u16,
     ir: u16,
     vr: [u8; 16],
+    sp: usize,
     stack: [u16; 16],
     memory: [u8; RAM],
     display: Display,
@@ -31,9 +32,10 @@ impl Chip8 {
 
         memory[0x50 .. (0x50 + font.len())].clone_from_slice(&font);
         Chip8 {
-            pc: 0,
+            pc: 0x200,
             ir: 0,
             vr: [0; 16],
+            sp: 0,
             stack: [0; 16],
             memory: memory,
             display: Display::new(),
@@ -61,7 +63,7 @@ impl Chip8 {
         opcode
     }
 
-    pub fn decode(&mut self, opcode: u16) {
+    pub fn decode(&mut self, opcode: u16) -> Result<(), String> {
         let x = ((opcode & 0x0F00) >> 8) as usize;
         let y = ((opcode & 0x00F0) >> 4) as usize;
         let n = opcode & 0x000F;
@@ -75,7 +77,22 @@ impl Chip8 {
 
         match (nib_1, nib_2, nib_3, nib_4) {
             (0x0, 0x0, 0xE, 0x0) => self.display.clear_screen(),
+            (0x0, 0x0, 0xE, 0xE) => {
+                if self.sp == 0 {
+                    return Err(String::from("Attempted to pop from empty stack."));
+                }
+                self.pc = self.stack[self.sp];
+                self.sp -= 1;
+            }
             (0x1, _, _, _) => self.pc = nnn,
+            (0x2, _, _, _) => {
+                self.sp += 1;
+                if self.sp >= self.stack.len() {
+                    return Err(String::from("Stack limit reached."));
+                }
+                self.stack[self.sp] = self.pc;
+                self.pc = nnn;
+            }
             (0x6, _, _, _) => self.vr[x] = nn,
             (0x7, _, _, _) => self.vr[x] = self.vr[x].wrapping_add(nn),
             (0xA, _, _, _) => self.ir = nnn,
@@ -90,13 +107,14 @@ impl Chip8 {
             }
             _ => {}
         }
+        Ok(())
     }
 
     pub fn execute() {
         todo!();
     }
 
-    pub fn run_cpu_cycle(&mut self) {
+    pub fn run_cpu_cycle(&mut self) -> Result<(), String> {
         self.display.reset_redraw();
         if self.last_tick.elapsed() >= Duration::from_micros(TIMER_RATE) {
             if self.delay_timer > 0 {
@@ -108,6 +126,7 @@ impl Chip8 {
         }
 
         let opcode = self.fetch();
-        self.decode(opcode);
+        self.decode(opcode)?;
+        Ok(())
     }
 }

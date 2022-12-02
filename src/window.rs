@@ -43,8 +43,8 @@ impl Chip8Window {
         let frame = self.pixels.get_frame_mut();
         for (i, pixel) in frame.chunks_exact_mut(4).enumerate() {
             let display = self.chip8.display();
-            let x = (i % display.width() as usize);
-            let y = (i / display.width() as usize);
+            let x = i % display.width() as usize;
+            let y = i / display.width() as usize;
 
             let rgba = if display.display()[x][y] == 0 {
                 [0x00, 0x00, 0x00, 0xff]
@@ -119,7 +119,7 @@ pub async fn run(rom: Vec<u8>) -> Result<(), Error> {
             }
             Event::MainEventsCleared => {
                 if last_cpu_tick.elapsed() >= Duration::from_micros(CPU_CLOCK) {
-                    chip8_window.chip8.run_cpu_cycle();
+                    chip8_window.chip8.run_cpu_cycle().expect("Error");
                     if chip8_window.chip8.display().redraw() {
                         chip8_window.pixels.render().expect("Error rendering window");
                     }
