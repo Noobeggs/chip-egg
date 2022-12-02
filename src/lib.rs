@@ -6,7 +6,7 @@ pub use options::Options;
 
 use std::time::{Duration, Instant};
 
-const RAM: usize = 4096;
+const RAM: usize = 65536;
 const TIMER_RATE: u64 = 16666; //60Hz
 
 pub struct Chip8 {
