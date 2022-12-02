@@ -138,9 +138,10 @@ impl Chip8 {
             }
             (0x8, _, _, 0x6) => {
                 // Ambiguous instruction! TODO: option to switch implementations.
-                self.vr[0xF] = self.vr[x] & 1;
                 // self.vr[x] = self.vr[y]; // old behavior.
+                let f = self.vr[x] & 1;
                 self.vr[x] = self.vr[x] >> 1;
+                self.vr[0xF] = f;
             }
             (0x8, _, _, 0x7) => {
                 let (result, carry) = self.vr[y].overflowing_sub(self.vr[x]);
@@ -149,9 +150,10 @@ impl Chip8 {
             }
             (0x8, _, _, 0xE) => {
                 // Ambiguous instruction! TODO: option to switch implementations.
-                self.vr[0xF] = (self.vr[x] & 0x80) >> 7;
                 // self.vr[x] = self.vr[y]; // old behavior.
+                let f = (self.vr[x] & 0x80) >> 7;
                 self.vr[x] = self.vr[x] << 1;
+                self.vr[0xF] = f;
             }
             (0x9, _, _, 0x0) => {
                 if self.vr[x] != self.vr[y] {
