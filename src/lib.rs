@@ -1,26 +1,33 @@
 mod display;
 mod options;
+
 pub use display::Display;
 pub use options::Options;
+
+use std::time::{Duration, Instant};
+
+const RAM: usize = 4096;
+const TIMER_RATE: u64 = 16666; //60Hz
 
 pub struct Chip8 {
     pc: u16,
     ir: u16,
     vr: [u8; 16],
     stack: [u16; 16],
-    memory: [u8; 4096],
-    pub display: Display,
+    memory: [u8; RAM],
+    display: Display,
     delay_timer: u8,
     sound_timer: u8,
-    options: Options
+    options: Options,
+    last_tick: Instant,
 }
 
 impl Chip8 {
     pub fn new(options: Options) -> Chip8 {
         // todo!();
-        let mut memory = [0; 4096];
+        let mut memory = [0; RAM];
 
-        let font = options.font;
+        let font = options.font();
 
         memory[0x50 .. (0x50 + font.len())].clone_from_slice(&font);
         Chip8 {
@@ -33,7 +40,16 @@ impl Chip8 {
             delay_timer: 0,
             sound_timer: 0,
             options: options,
+            last_tick: Instant::now(),
         }
+    }
+
+    pub fn display(&self) -> &Display {
+        &self.display
+    }
+
+    pub fn load_rom(&mut self, rom: Vec<u8>) {
+        self.memory[0x200..][..rom.len()].copy_from_slice(rom.as_slice());
     }
 
     pub fn fetch(&mut self) -> u16 {
@@ -72,11 +88,26 @@ impl Chip8 {
                 let sprite = &self.memory[self.ir as usize .. (self.ir + n) as usize];
                 self.display.draw(sprite, self.vr[x], self.vr[y]);
             }
-            _ => todo!()
+            _ => {}
         }
     }
 
     pub fn execute() {
         todo!();
+    }
+
+    pub fn run_cpu_cycle(&mut self) {
+        self.display.reset_redraw();
+        if self.last_tick.elapsed() >= Duration::from_micros(TIMER_RATE) {
+            if self.delay_timer > 0 {
+                self.delay_timer -= 1;
+            }
+            if self.sound_timer > 0 {
+                self.sound_timer -= 1;
+            }
+        }
+
+        let opcode = self.fetch();
+        self.decode(opcode);
     }
 }

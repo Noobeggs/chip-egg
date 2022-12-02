@@ -4,13 +4,16 @@ use winit::{
     event_loop::{ControlFlow, EventLoop},
     window::WindowBuilder,
 };
-use pixels::{ Error, Pixels, SurfaceTexture };
+use pixels::{Error, Pixels, SurfaceTexture};
 
 use crate::Chip8;
 use crate::Options;
+use crate::CPU_CLOCK;
+
+use std::time::{Duration, Instant};
 
 pub struct Chip8Window {
-    pub pixels: Pixels,
+    pixels: Pixels,
     chip8: Chip8,
 }
 
@@ -39,11 +42,11 @@ impl Chip8Window {
     pub fn render(&mut self) {
         let frame = self.pixels.get_frame_mut();
         for (i, pixel) in frame.chunks_exact_mut(4).enumerate() {
-            let display = &self.chip8.display;
-            let x = (i % display.width as usize);
-            let y = (i / display.width as usize);
+            let display = self.chip8.display();
+            let x = (i % display.width() as usize);
+            let y = (i / display.width() as usize);
 
-            let rgba = if display.display[x][y] == 0 {
+            let rgba = if display.display()[x][y] == 0 {
                 [0x00, 0x00, 0x00, 0xff]
             } else {
                 [0xff, 0xff, 0xff, 0xff]
@@ -54,15 +57,16 @@ impl Chip8Window {
     }
 }
 
-pub async fn run() -> Result<(), Error> {
+pub async fn run(rom: Vec<u8>) -> Result<(), Error> {
     env_logger::init();
     let event_loop = EventLoop::new();
     
     let options = Options::new();
     let chip8 = Chip8::new(options);
+    let display = chip8.display();
 
-    let width = chip8.display.width;
-    let height = chip8.display.height;
+    let width = display.width();
+    let height = display.height();
     
     let window = {
         let size = LogicalSize::new(width as f64, height as f64);
@@ -82,6 +86,8 @@ pub async fn run() -> Result<(), Error> {
     };
 
     let mut chip8_window = Chip8Window::new(pixels, chip8);
+    chip8_window.chip8.load_rom(rom);
+    let mut last_cpu_tick = Instant::now();
 
     event_loop.run(move |event, _, control_flow| {
         match event {
@@ -102,6 +108,7 @@ pub async fn run() -> Result<(), Error> {
                     } => *control_flow = ControlFlow::Exit,
                     WindowEvent::Resized(physical_size) => {
                         chip8_window.resize(*physical_size);
+                        chip8_window.pixels.render().expect("Error rendering window");
                     }
                     _ => {}
                 }
@@ -111,6 +118,13 @@ pub async fn run() -> Result<(), Error> {
                 chip8_window.render();
             }
             Event::MainEventsCleared => {
+                if last_cpu_tick.elapsed() >= Duration::from_micros(CPU_CLOCK) {
+                    chip8_window.chip8.run_cpu_cycle();
+                    if chip8_window.chip8.display().redraw() {
+                        chip8_window.pixels.render().expect("Error rendering window");
+                    }
+                }
+                last_cpu_tick = Instant::now();
                 window.request_redraw();
             }
             _ => {}

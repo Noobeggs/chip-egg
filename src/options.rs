@@ -1,5 +1,5 @@
 pub struct Options {
-    pub font: [u8; 80]
+    font: [u8; 80]
 }
 
 impl Options {
@@ -24,5 +24,9 @@ impl Options {
                 0xF0, 0x80, 0xF0, 0x80, 0x80  // F
             ]
         }
+    }
+
+    pub fn font(&self) -> [u8; 80] {
+        self.font
     }
 }
