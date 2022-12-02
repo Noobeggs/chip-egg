@@ -48,6 +48,10 @@ impl Display {
         self.redraw = false;
     }
 
+    pub fn clear_screen(&mut self) {
+        self.display = [[0u8; HEIGHT]; WIDTH];
+    }
+
     pub fn draw(&mut self, sprite: &[u8], vx: u8, vy: u8) -> u8 {
         let x = vx & (self.width-1);
         let y = vy & (self.height-1);

@@ -74,7 +74,7 @@ impl Chip8 {
         let nib_4 = opcode & 0x000F;
 
         match (nib_1, nib_2, nib_3, nib_4) {
-            (0x0, 0x0, 0xE, 0x0) => {}
+            (0x0, 0x0, 0xE, 0x0) => self.display.clear_screen(),
             (0x1, _, _, _) => self.pc = nnn,
             (0x6, _, _, _) => self.vr[x] = nn,
             (0x7, _, _, _) => self.vr[x] = self.vr[x].wrapping_add(nn),
