@@ -21,6 +21,7 @@ pub struct Chip8 {
     sound_timer: u8,
     options: Options,
     last_tick: Instant,
+    keyboard: [bool; 16],
 }
 
 impl Chip8 {
@@ -43,6 +44,7 @@ impl Chip8 {
             sound_timer: 0,
             options: options,
             last_tick: Instant::now(),
+            keyboard: [false; 16],
         }
     }
 
@@ -93,9 +95,66 @@ impl Chip8 {
                 self.stack[self.sp] = self.pc;
                 self.pc = nnn;
             }
+            (0x3, _, _, _) => {
+                if self.vr[x] == nn {
+                    self.fetch();
+                }
+            }
+            (0x4, _, _, _) => {
+                if self.vr[x] != nn {
+                    self.fetch();
+                }
+            }
+            (0x5, _, _, 0x0) => {
+                if self.vr[x] == self.vr[y] {
+                    self.fetch();
+                }
+            }
             (0x6, _, _, _) => self.vr[x] = nn,
             (0x7, _, _, _) => self.vr[x] = self.vr[x].wrapping_add(nn),
+            // Logical and Arithmetic Instructions
+            (0x8, _, _, 0x0) => self.vr[x] = self.vr[y],
+            (0x8, _, _, 0x1) => self.vr[x] |= self.vr[y],
+            (0x8, _, _, 0x2) => self.vr[x] &= self.vr[y],
+            (0x8, _, _, 0x3) => self.vr[x] ^= self.vr[y],
+            (0x8, _, _, 0x4) => {
+                let (result, carry) = self.vr[x].overflowing_add(self.vr[y]);
+                self.vr[x] = result;
+                self.vr[0xF] = if carry {1} else {0};
+            }
+            (0x8, _, _, 0x5) => {
+                let (result, carry) = self.vr[x].overflowing_sub(self.vr[y]);
+                self.vr[x] = result;
+                self.vr[0xF] = if carry {0} else {1}; // VF set to 0 if underflow.
+            }
+            (0x8, _, _, 0x6) => {
+                // Ambiguous instruction! TODO: option to switch implementations.
+                self.vr[x] = self.vr[y];
+                self.vr[0xF] = self.vr[x] & 1;
+                self.vr[x] = self.vr[x] >> 1;
+            }
+            (0x8, _, _, 0x7) => {
+                let (result, carry) = self.vr[y].overflowing_sub(self.vr[x]);
+                self.vr[x] = result;
+                self.vr[0xF] = if carry {0} else {1};
+            }
+            (0x8, _, _, 0xE) => {
+                // Ambiguous instruction! TODO: option to switch implementations.
+                self.vr[x] = self.vr[y];
+                self.vr[0xF] = (self.vr[x] & 0x80) >> 7;
+                self.vr[x] = self.vr[x] << 1;
+            }
+            (0x9, _, _, 0x0) => {
+                if self.vr[x] != self.vr[y] {
+                    self.fetch();
+                }
+            }
             (0xA, _, _, _) => self.ir = nnn,
+            (0xB, _, _, _) => {
+                // Ambiguous instruction! TODO: option to switch implementations.
+                self.pc = nnn + u16::from(self.vr[0]);
+            }
+            (0xC, _, _, _) => self.vr[x] = fastrand::u8(..) & nn,
             (0xD, _, _, _) => {
                 // let mut sprite = Vec::<Vec<u8>>::new();
                 // for h in 0..n {
@@ -104,6 +163,47 @@ impl Chip8 {
                 // }
                 let sprite = &self.memory[self.ir as usize .. (self.ir + n) as usize];
                 self.display.draw(sprite, self.vr[x], self.vr[y]);
+            }
+            (0xE, _, 0x9, 0xE) => if self.keyboard[self.vr[x] as usize] {self.fetch();},
+            (0xE, _, 0xA, 0x1) => if !self.keyboard[self.vr[x] as usize] {self.fetch();},
+            (0xF, _, 0x0, 0x7) => self.vr[x] = self.delay_timer,
+            (0xF, _, 0x0, 0xA) => {
+                self.pc = self.pc.wrapping_sub(2);
+                for key in 0..self.keyboard.len() {
+                    if self.keyboard[key] {
+                        self.vr[x] = key as u8;
+                        self.fetch();
+                        self.keyboard[key] = false;
+                        break;
+                    }
+                }
+            }
+            (0xF, _, 0x1, 0x5) => self.delay_timer = self.vr[x],
+            (0xF, _, 0x1, 0x8) => self.sound_timer = self.vr[x],
+            (0xF, _, 0x1, 0xE) => {
+                // Ambiguous instruction! TODO: option to switch implementations.
+                if self.ir < 0x0FFF && (self.ir + u16::from(self.vr[x])) >= 0x1000 {
+                    self.vr[0xF] = 1
+                }
+                self.ir = self.ir.wrapping_add(u16::from(self.vr[x]));
+            }
+            (0xF, _, 0x2, 0x9) => self.ir = 0x50 + u16::from((self.vr[x] & 0x0F) * 5),
+            (0xF, _, 0x3, 0x3) => {
+                self.memory[self.ir as usize] = self.vr[x] / 100;
+                self.memory[self.ir as usize + 1] = (self.vr[x] / 10) % 10;
+                self.memory[self.ir as usize + 2] = self.vr[x] % 10;
+            }
+            (0xF, _, 0x5, 0x5) => {
+                // Ambiguous instruction! TODO: option to switch implementations.
+                for i in 0..self.vr.len() {
+                    self.memory[self.ir as usize + i] = self.vr[i];
+                }
+            }
+            (0xF, _, 0x6, 0x5) => {
+                // Ambiguous instruction! TODO: option to switch implementations.
+                for i in 0..self.vr.len() {
+                    self.vr[i] = self.memory[self.ir as usize + i];
+                }
             }
             _ => {}
         }
