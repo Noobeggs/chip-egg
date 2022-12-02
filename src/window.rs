@@ -178,6 +178,7 @@ pub async fn run(rom: Vec<u8>) -> Result<(), Error> {
                     chip8_window.chip8.run_cpu_cycle().expect("Error");
                     if chip8_window.chip8.display().redraw() {
                         chip8_window.pixels.render().expect("Error rendering window");
+                        chip8_window.chip8.display_mut().reset_redraw();
                     }
                 }
                 last_cpu_tick = Instant::now();

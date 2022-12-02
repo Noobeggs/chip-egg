@@ -52,6 +52,10 @@ impl Chip8 {
         &self.display
     }
 
+    pub fn display_mut(&mut self) -> &mut Display {
+        &mut self.display
+    }
+
     pub fn load_rom(&mut self, rom: Vec<u8>) {
         self.memory[0x200..][..rom.len()].copy_from_slice(rom.as_slice());
     }
@@ -220,7 +224,6 @@ impl Chip8 {
     }
 
     pub fn run_cpu_cycle(&mut self) -> Result<(), String> {
-        self.display.reset_redraw();
         if self.last_tick.elapsed() >= Duration::from_micros(TIMER_RATE) {
             if self.delay_timer > 0 {
                 self.delay_timer -= 1;
