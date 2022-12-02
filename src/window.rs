@@ -92,7 +92,12 @@ impl Chip8Window {
     }
 
     pub fn update(&mut self) {
-        // todo!();
+        self.chip8.run_cpu_cycle().expect("Error");
+        if self.chip8.display().redraw() {
+            self.render();
+            // chip8_window.pixels.render().expect("Error rendering window");
+            self.chip8.display_mut().reset_redraw();
+        }
     }
 
     pub fn render(&mut self) {
@@ -178,12 +183,7 @@ pub async fn run(rom: Vec<u8>) -> Result<(), Error> {
             Event::MainEventsCleared => {
                 if last_cpu_tick.elapsed() >= Duration::from_micros(CPU_CLOCK) {
                     last_cpu_tick = Instant::now();
-                    chip8_window.chip8.run_cpu_cycle().expect("Error");
-                    if chip8_window.chip8.display().redraw() {
-                        chip8_window.render();
-                        // chip8_window.pixels.render().expect("Error rendering window");
-                        chip8_window.chip8.display_mut().reset_redraw();
-                    }
+                    chip8_window.update();
                 }
                 window.request_redraw();
             }
