@@ -6,9 +6,8 @@ use winit::{
 };
 use pixels::{Error, Pixels, SurfaceTexture};
 
-use crate::Chip8;
-use crate::Options;
-use crate::CPU_CLOCK;
+use crate::{Chip8, Options, TIMER_RATE, TICK_RATE};
+// use crate::CPU_CLOCK;
 
 use std::time::{Duration, Instant};
 
@@ -92,7 +91,8 @@ impl Chip8Window {
     }
 
     pub fn update(&mut self) {
-        self.chip8.run_cpu_cycle().expect("Error");
+        // self.chip8.run_cpu_cycle().expect("Error");
+        self.chip8.run_cpu_cycle_alternate(TICK_RATE).expect("Error"); // Runs much faster...
         if self.chip8.display().redraw() {
             self.render();
             // chip8_window.pixels.render().expect("Error rendering window");
@@ -149,7 +149,8 @@ pub async fn run(rom: Vec<u8>) -> Result<(), Error> {
 
     let mut chip8_window = Chip8Window::new(pixels, chip8);
     chip8_window.chip8.load_rom(rom);
-    let mut last_cpu_tick = Instant::now();
+    // let mut last_cpu_tick = Instant::now();
+    let mut last_timer_tick = Instant::now();
 
     event_loop.run(move |event, _, control_flow| {
         match event {
@@ -181,9 +182,13 @@ pub async fn run(rom: Vec<u8>) -> Result<(), Error> {
                 chip8_window.render();
             }
             Event::MainEventsCleared => {
-                if last_cpu_tick.elapsed() >= Duration::from_micros(CPU_CLOCK) {
-                    last_cpu_tick = Instant::now();
-                    chip8_window.update();
+                // if last_cpu_tick.elapsed() >= Duration::from_micros(CPU_CLOCK) { // old timing method has perf issues...
+                //     last_cpu_tick = Instant::now();
+                //     chip8_window.update();
+                // }
+                if last_timer_tick.elapsed() >= Duration::from_micros(TIMER_RATE) {
+                    last_timer_tick = Instant::now();
+                    chip8_window.update()
                 }
                 window.request_redraw();
             }

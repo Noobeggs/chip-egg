@@ -240,4 +240,20 @@ impl Chip8 {
         self.decode(opcode)?;
         Ok(())
     }
+
+    pub fn run_cpu_cycle_alternate(&mut self, tickrate: u16) -> Result<(), String> {
+        if self.delay_timer > 0 {
+            self.delay_timer -= 1;
+        }
+        if self.sound_timer > 0 {
+            self.sound_timer -= 1;
+        }
+
+        for _ in 0..tickrate {
+            let opcode = self.fetch();
+            self.decode(opcode)?;
+        }
+
+        Ok(())
+    }
 }
